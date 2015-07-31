@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <linux/sockios.h>
 #include <linux/cdrom.h>
+#include <linux/hdreg.h>
 #include <getopt.h>
 
 struct {
@@ -37,6 +38,8 @@ struct {
 	int cmd;
 } ioctl_string[] = {
 	{ "CDROMEJECT", CDROMEJECT },
+	{ "HDIO_GET_IDENTITY", HDIO_GET_IDENTITY},
+	{ "HDIO_GETGEO", HDIO_GETGEO },
 	{ },
 };
 
@@ -50,7 +53,6 @@ struct ioctl_request {
 	int legacy;
 	int address;
 };
-
 
 static void ioctl_fill(struct ioctl_request *req, unsigned int cmd)
 {
@@ -89,6 +91,8 @@ static int ioctl_print_data(struct ioctl_request *req)
 	for (i = 1; i <= req->size; i++) {
 		printf("%02x ", *data++);
 		if (!(i % 20)) {
+			//for (j = 20; j > 0; j--)
+			//	printf("%c ", *(data - j));
 			printf("\n");
 		}
 	}
@@ -131,7 +135,6 @@ static void usage(void)
 
 static const struct option main_options[] = {
 	{ "data", required_argument, NULL, 'd' },
-	{ "version", no_argument, NULL, 'v' },
 	{ "help", no_argument, NULL, 'h' },
 	{ "list", no_argument, NULL, 'L'},
 	{ "alloc", required_argument, NULL, 'A' },
@@ -172,13 +175,16 @@ int main(int argc, char *argv[])
 		case 'V':
 			value = atoi(optarg);
 			break;
+		case 'h':
+			usage();
+			return EXIT_SUCCESS;
 		default:
 			break;
 		}
 	}
 
 	if (argc - optind != 1) {
-		printf("You must specify an request id\n");
+		printf("You must specify a request id\n");
 		usage();
 		return EXIT_FAILURE;
 	}
